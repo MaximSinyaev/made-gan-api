@@ -9,5 +9,7 @@ regex
 tqdm
 omegaconf
 pytorch-lightning
+imageio-ffmpeg
+einops
 git+https://github.com/CompVis/taming-transformers#egg=taming-transformers
 git+https://github.com/openai/CLIP#egg=CLIP
