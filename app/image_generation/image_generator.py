@@ -277,10 +277,10 @@ class ImageGeneratorGAN:
     ):
         opt.zero_grad()
         lossAll = self.ascend_txt(z, perceptor, args, z_orig, pMs)
-        if i % args.display_freq == 0 and i != 0:
-            self.checkin(
-                i, lossAll, z, args, filename=filename or "progress.png", path=path
-            )
+        # if i % args.display_freq == 0 and i != 0:
+        #     self.checkin(
+        #         i, lossAll, z, args, filename=filename or "progress.png", path=path
+        #     )
 
         loss = sum(lossAll)
         loss.backward()
