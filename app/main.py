@@ -5,7 +5,6 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from celery.result import AsyncResult
-from worker.celery_worker import generate
 from worker.celery_app import celery_app
 
 CFG_PATH = "configs/cfg.yaml"
@@ -38,10 +37,6 @@ async def app_root():
 
 @app.get("/generate/{word}")
 async def generate(word: str, background_task: BackgroundTasks):
-    task_name = None
-
-    # set correct task name based on the way you run the example
-
     task_name = "app.app.worker.celery_worker.generate"
 
     task = celery_app.send_task(task_name, args=[word])
