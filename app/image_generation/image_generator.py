@@ -4,7 +4,6 @@ import sys
 import os
 
 
-sys.path.insert(1, "/content/taming-transformers")
 from PIL import Image
 import torch
 from torch import optim

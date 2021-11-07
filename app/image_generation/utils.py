@@ -1,14 +1,12 @@
 import math
 import sys
 
-sys.path.insert(1, "/content/taming-transformers")
 from base64 import b64encode
 from omegaconf import OmegaConf
 from PIL import Image
 from taming.models import cond_transformer, vqgan
-import taming.modules
 import torch
-from torch import nn, optim
+from torch import nn
 from torch.nn import functional as F
 
 
