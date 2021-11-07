@@ -20,7 +20,7 @@ from PIL import ImageFile, Image
 # from app.configs.consts import model_names
 from app.image_generation.utils import *
 
-LOG = logging.Logger("Gan logger", level=logging.DEBUG)
+LOG = logging.getLogger("Gan logger", level=logging.INFO)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
@@ -113,6 +113,7 @@ class ImageGeneratorGAN:
             else:
                 z = one_hot @ model.quantize.embedding.weight
             z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
+            print(z.shape)
             z = torch.rand_like(z) * 2
 
         z_orig = z.clone()
