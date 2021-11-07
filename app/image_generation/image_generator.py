@@ -182,9 +182,9 @@ class ImageGeneratorGAN:
         LOG.info(f"Using texts: {texts}")
 
         if init_image == "None":
-            self.init_image = None
+            init_image = None
         if target_images == "None" or not target_images:
-            self.target_images = []
+            target_images = []
         else:
             target_images = target_images.split("|")
             target_images = [image.strip() for image in target_images]
