@@ -63,19 +63,19 @@ class ImageGeneratorGAN:
             texts, init_image, target_images, width, height, seed
         )
         LOG.info(args)
-        model = load_vqgan_model(args.vqgan_config, args.vqgan_checkpoint).to(
+        self.model = load_vqgan_model(args.vqgan_config, args.vqgan_checkpoint).to(
             self.device
         )
-        perceptor = (
+        self.perceptor = (
             clip.load(args.clip_model, jit=False, device=self.device)[0]
             .eval()
             .requires_grad_(False)
             .to(self.device)
         )
 
-        cut_size = perceptor.visual.input_resolution
+        cut_size = self.perceptor.visual.input_resolution
 
-        f = 2 ** (model.decoder.num_resolutions - 1)
+        f = 2 ** (self.model.decoder.num_resolutions - 1)
         make_cutouts = MakeCutouts(cut_size, args.cutn, cut_pow=args.cut_pow)
 
         toksX, toksY = args.size[0] // f, args.size[1] // f
@@ -83,16 +83,20 @@ class ImageGeneratorGAN:
 
         if args.vqgan_checkpoint == "vqgan_openimages_f16_8192.ckpt":
             e_dim = 256
-            n_toks = model.quantize.n_embed
-            z_min = model.quantize.embed.weight.min(dim=0).values[None, :, None, None]
-            z_max = model.quantize.embed.weight.max(dim=0).values[None, :, None, None]
-        else:
-            e_dim = model.quantize.e_dim
-            n_toks = model.quantize.n_e
-            z_min = model.quantize.embedding.weight.min(dim=0).values[
+            n_toks = self.model.quantize.n_embed
+            z_min = self.model.quantize.embed.weight.min(dim=0).values[
                 None, :, None, None
             ]
-            z_max = model.quantize.embedding.weight.max(dim=0).values[
+            z_max = self.model.quantize.embed.weight.max(dim=0).values[
+                None, :, None, None
+            ]
+        else:
+            e_dim = self.model.quantize.e_dim
+            n_toks = self.model.quantize.n_e
+            z_min = self.model.quantize.embedding.weight.min(dim=0).values[
+                None, :, None, None
+            ]
+            z_max = self.model.quantize.embedding.weight.max(dim=0).values[
                 None, :, None, None
             ]
 
@@ -104,15 +108,15 @@ class ImageGeneratorGAN:
             pil_image = img.convert("RGB")
             pil_image = pil_image.resize((sideX, sideY), Image.LANCZOS)
             pil_tensor = TF.to_tensor(pil_image)
-            z, *_ = model.encode(pil_tensor.to(self.device).unsqueeze(0) * 2 - 1)
+            z, *_ = self.model.encode(pil_tensor.to(self.device).unsqueeze(0) * 2 - 1)
         else:
             one_hot = F.one_hot(
                 torch.randint(n_toks, [toksY * toksX], device=self.device), n_toks
             ).float()
             if args.vqgan_checkpoint == "vqgan_openimages_f16_8192.ckpt":
-                z = one_hot @ model.quantize.embed.weight
+                z = one_hot @ self.model.quantize.embed.weight
             else:
-                z = one_hot @ model.quantize.embedding.weight
+                z = one_hot @ self.model.quantize.embedding.weight
             z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
             print(z.shape)
             z = torch.rand_like(z) * 2
@@ -129,7 +133,9 @@ class ImageGeneratorGAN:
         pMs = []
         for prompt in args.prompts:
             txt, weight, stop = parse_prompt(prompt)
-            embed = perceptor.encode_text(clip.tokenize(txt).to(self.device)).float()
+            embed = self.perceptor.encode_text(
+                clip.tokenize(txt).to(self.device)
+            ).float()
             pMs.append(Prompt(embed, weight, stop).to(self.device))
 
         for prompt in args.image_prompts:
@@ -138,12 +144,14 @@ class ImageGeneratorGAN:
             pil_image = img.convert("RGB")
             img = resize_image(pil_image, (sideX, sideY))
             batch = make_cutouts(TF.to_tensor(img).unsqueeze(0).to(self.device))
-            embed = perceptor.encode_image(normalize(batch)).float()
+            embed = self.perceptor.encode_image(normalize(batch)).float()
             pMs.append(Prompt(embed, weight, stop).to(self.device))
 
         for seed, weight in zip(args.noise_prompt_seeds, args.noise_prompt_weights):
             gen = torch.Generator().manual_seed(seed)
-            embed = torch.empty([1, perceptor.visual.output_dim]).normal_(generator=gen)
+            embed = torch.empty([1, self.perceptor.visual.output_dim]).normal_(
+                generator=gen
+            )
             pMs.append(Prompt(embed, weight).to(self.device))
 
         global i
@@ -156,7 +164,7 @@ class ImageGeneratorGAN:
                     z,
                     z_min,
                     z_max,
-                    perceptor,
+                    self.perceptor,
                     args,
                     z_orig,
                     pMs,
@@ -164,8 +172,8 @@ class ImageGeneratorGAN:
                     path=f"results",
                 )
                 if i == max_iterations:
-                    lossAll = self.ascend_txt(z, perceptor, args, z_orig, pMs)
-                    self.checkin(i, lossAll)
+                    lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
+                    self.checkin(i, lossAll, z, args)
                     break
                 i += 1
         except KeyboardInterrupt:
@@ -212,13 +220,13 @@ class ImageGeneratorGAN:
     def synth(self, z, args):
         if args.vqgan_checkpoint == "vqgan_openimages_f16_8192.ckpt":
             z_q = vector_quantize(
-                z.movedim(1, 3), self.base_model.quantize.embed.weight
+                z.movedim(1, 3), self.model.quantize.embed.weight
             ).movedim(3, 1)
         else:
             z_q = vector_quantize(
-                z.movedim(1, 3), self.base_model.quantize.embedding.weight
+                z.movedim(1, 3), self.model.quantize.embedding.weight
             ).movedim(3, 1)
-        return clamp_with_grad(self.base_model.decode(z_q).add(1).div(2), 0, 1)
+        return clamp_with_grad(self.model.decode(z_q).add(1).div(2), 0, 1)
 
     @torch.no_grad()
     def checkin(self, i, losses, z, args, filename, path):
