@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "made-gan-api"
+version = "0.1.0"
+description = "FastAPI with Celery tasks minimal example"
+authors = ["Grega Vrbančič <grega.vrbancic@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+aiofiles = "^0.7.0"
+SQLAlchemy = "^1.4.26"
+flake8 = "^3.8.3"
+fastapi = "^0.60.1"
+hypercorn = "^0.10.2"
+celery = "^4.3.0"
+redis = "^3.5.3"
+Jinja2 = "^3.0.2"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.8.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
