@@ -61,6 +61,7 @@ class ImageGeneratorGAN:
         args = self.set_model_params(
             texts, init_image, target_images, width, height, seed
         )
+        LOG.info(args)
         model = load_vqgan_model(args.vqgan_config, args.vqgan_checkpoint).to(
             self.device
         )
