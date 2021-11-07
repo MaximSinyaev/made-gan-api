@@ -144,7 +144,7 @@ class ImageGeneratorGAN:
             pil_image = img.convert("RGB")
             img = resize_image(pil_image, (sideX, sideY))
             batch = make_cutouts(TF.to_tensor(img).unsqueeze(0).to(self.device))
-            embed = self.perceptor.encode_image(normalize(batch)).float()
+            embed = self.perceptor.encode_image(self.normalize(batch)).float()
             pMs.append(Prompt(embed, weight, stop).to(self.device))
 
         for seed, weight in zip(args.noise_prompt_seeds, args.noise_prompt_weights):
@@ -241,7 +241,7 @@ class ImageGeneratorGAN:
     def ascend_txt(self, z, perceptor, args, z_orig, pMs):
         global i
         out = self.synth(z, args)
-        iii = perceptor.encode_image(normalize(make_cutouts(out))).float()
+        iii = perceptor.encode_image(self.normalize(make_cutouts(out))).float()
 
         result = []
 
