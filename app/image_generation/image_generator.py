@@ -38,14 +38,13 @@ class ImageGeneratorGAN:
     }
 
     def __init__(
-        self,
-        model_name="vqgan_imagenet_f16_16384",
-        seed=-1,
-        # device="cpu",
+        self, model_name="vqgan_imagenet_f16_16384", seed=-1, device=None,
     ) -> None:
         self.base_model = model_names[model_name]
-
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            device = torch.device(device)
         LOG.info(f"Using device: {self.device}")
 
     def generate_picture(
