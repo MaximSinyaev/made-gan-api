@@ -221,18 +221,18 @@ class ImageGeneratorGAN:
         return clamp_with_grad(self.base_model.decode(z_q).add(1).div(2), 0, 1)
 
     @torch.no_grad()
-    def checkin(self, i, losses, filename, path):
+    def checkin(self, i, losses, z, args, filename, path):
         if not os.path.exists(path):
             os.makedirs(path)
         losses_str = ", ".join(f"{loss.item():g}" for loss in losses)
         LOG.info(f"i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}")
-        out = self.synth(z)
+        out = self.synth(z, args)
         TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}_{i}.png")
         # display.display(display.Image(f"{path}/{filename}_{i}.png"))
 
     def ascend_txt(self, z, perceptor, args, z_orig, pMs):
         global i
-        out = self.synth(z)
+        out = self.synth(z, args)
         iii = perceptor.encode_image(normalize(make_cutouts(out))).float()
 
         result = []
@@ -271,7 +271,9 @@ class ImageGeneratorGAN:
         opt.zero_grad()
         lossAll = self.ascend_txt(z, perceptor, args, z_orig, pMs)
         if i % args.display_freq == 0 and i != 0:
-            self.checkin(i, lossAll, filename=filename or "progress.png", path=path)
+            self.checkin(
+                i, lossAll, z, args, filename=filename or "progress.png", path=path
+            )
 
         loss = sum(lossAll)
         loss.backward()
