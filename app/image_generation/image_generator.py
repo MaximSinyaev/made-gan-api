@@ -18,7 +18,7 @@ import imageio
 from PIL import ImageFile, Image
 
 
-from app.configs.consts import model_names
+# from app.configs.consts import model_names
 from app.image_generation.utils import *
 
 LOG = logging.Logger("Gan logger", level=logging.DEBUG)
