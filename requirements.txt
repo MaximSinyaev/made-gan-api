@@ -6,3 +6,5 @@ kornia==0.6.1
 omegaconf==2.1.1
 Pillow==8.4.0
 torchvision==0.11.1
+git+https://github.com/CompVis/taming-transformers#egg=taming-transformers
+git+https://github.com/openai/CLIP#egg=CLIP
