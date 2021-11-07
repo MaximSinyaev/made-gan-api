@@ -20,7 +20,8 @@ from PIL import ImageFile, Image
 # from app.configs.consts import model_names
 from app.image_generation.utils import *
 
-LOG = logging.getLogger("Gan logger", level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger()
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
