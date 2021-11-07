@@ -76,7 +76,7 @@ class ImageGeneratorGAN:
         cut_size = self.perceptor.visual.input_resolution
 
         f = 2 ** (self.model.decoder.num_resolutions - 1)
-        make_cutouts = MakeCutouts(cut_size, args.cutn, cut_pow=args.cut_pow)
+        self.make_cutouts = MakeCutouts(cut_size, args.cutn, cut_pow=args.cut_pow)
 
         toksX, toksY = args.size[0] // f, args.size[1] // f
         sideX, sideY = toksX * f, toksY * f
@@ -143,7 +143,7 @@ class ImageGeneratorGAN:
             img = Image.open(path)
             pil_image = img.convert("RGB")
             img = resize_image(pil_image, (sideX, sideY))
-            batch = make_cutouts(TF.to_tensor(img).unsqueeze(0).to(self.device))
+            batch = self.make_cutouts(TF.to_tensor(img).unsqueeze(0).to(self.device))
             embed = self.perceptor.encode_image(self.normalize(batch)).float()
             pMs.append(Prompt(embed, weight, stop).to(self.device))
 
@@ -241,12 +241,11 @@ class ImageGeneratorGAN:
     def ascend_txt(self, z, perceptor, args, z_orig, pMs):
         global i
         out = self.synth(z, args)
-        iii = perceptor.encode_image(self.normalize(make_cutouts(out))).float()
+        iii = perceptor.encode_image(self.normalize(self.make_cutouts(out))).float()
 
         result = []
 
         if args.init_weight:
-            # result.append(F.mse_loss(z, z_orig) * args.init_weight / 2)
             result.append(
                 F.mse_loss(z, torch.zeros_like(z_orig))
                 * ((1 / torch.tensor(i * 2 + 1)) * args.init_weight)
