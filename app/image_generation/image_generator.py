@@ -44,7 +44,7 @@ class ImageGeneratorGAN:
         if device is None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
-            device = torch.device(device)
+            self.device = torch.device(device)
         LOG.info(f"Using device: {self.device}")
 
     def generate_picture(
