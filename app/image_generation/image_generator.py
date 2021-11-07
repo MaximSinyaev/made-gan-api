@@ -175,7 +175,7 @@ class ImageGeneratorGAN:
                 )
                 if i == max_iterations:
                     lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
-                    self.checkin(i, lossAll, z, args)
+                    self.checkin(i, lossAll, z, args, filenam, path)
                     break
                 i += 1
         except KeyboardInterrupt:
