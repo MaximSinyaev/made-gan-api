@@ -22,6 +22,8 @@ from app.image_generation.utils import *
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
+
+torch.set_num_threads(6)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
