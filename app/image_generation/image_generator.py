@@ -67,7 +67,7 @@ class ImageGeneratorGAN:
             self.device
         )
         perceptor = (
-            clip.load(args.clip_model, jit=False)[0]
+            clip.load(args.clip_model, jit=False, device=self.device)[0]
             .eval()
             .requires_grad_(False)
             .to(self.device)
