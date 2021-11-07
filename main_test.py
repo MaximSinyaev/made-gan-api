@@ -3,5 +3,5 @@ from app.image_generation.image_generator import ImageGeneratorGAN
 
 if __name__ == "__main__":
     gan = ImageGeneratorGAN(device="cuda:3")
-    gan.generate_picture("Squirel family", width=50, height=50)
+    gan.generate_picture("Squirel family", width=256, height=256)
 
