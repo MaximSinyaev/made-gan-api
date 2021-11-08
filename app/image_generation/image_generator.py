@@ -56,8 +56,8 @@ class ImageGeneratorGAN:
         self.base_model = model_name
         LOG.info(f'Using model {self.base_model}')
 
-        vqgan_config=f"models/{self.base_model}.yaml",
-        vqgan_checkpoint=f"models/{self.base_model}.ckpt",
+        vqgan_config=f"models/{self.base_model}.yaml"
+        vqgan_checkpoint=f"models/{self.base_model}.ckpt"
 
         # Models init
         self.model = load_vqgan_model(vqgan_config, vqgan_checkpoint).to(
