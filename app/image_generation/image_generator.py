@@ -38,18 +38,46 @@ class ImageGeneratorGAN:
         "faceshq": "FacesHQ",
         "sflckr": "S-FLCKR",
     }
+    clip_model='ViT-B/32'
 
     def __init__(
         self, model_name="vqgan_imagenet_f16_16384", seed=-1, device=None,
+        cutn=32,
+        cut_pow=1.0,
     ) -> None:
-        self.model_name = self.model_names[model_name]
-        assert model_name in self.model_names
-        self.base_model = model_name
         if device is None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
             self.device = torch.device(device)
         LOG.info(f"Using device: {self.device}")
+
+        self.model_name = self.model_names[model_name]
+        assert model_name in self.model_names
+        self.base_model = model_name
+        LOG.info(f'Using model {self.base_model}')
+
+        vqgan_config=f"models/{self.base_model}.yaml",
+        vqgan_checkpoint=f"models/{self.base_model}.ckpt",
+
+        # Models init
+        self.model = load_vqgan_model(vqgan_config, vqgan_checkpoint).to(
+            self.device
+        )
+        self.perceptor = (
+            clip.load(self.clip_model, jit=False, device=self.device)[0]
+            .eval()
+            .requires_grad_(False)
+            .to(self.device)
+        )
+        cut_size = self.perceptor.visual.input_resolution
+
+        self.f = 2 ** (self.model.decoder.num_resolutions - 1)
+        self.make_cutouts = MakeCutouts(cut_size, cutn, cut_pow=cut_pow)
+
+        self.normalize = transforms.Normalize(
+            mean=[0.48145466, 0.4578275, 0.40821073],
+            std=[0.26862954, 0.26130258, 0.27577711],
+        )
 
     def generate_picture(
         self,
@@ -60,28 +88,16 @@ class ImageGeneratorGAN:
         height=256,
         seed=-1,
         max_iterations=500,
+        filename="test",
+        path="results",
     ):
         args = self.set_model_params(
             texts, init_image, target_images, width, height, seed
         )
         LOG.info(args)
-        self.model = load_vqgan_model(args.vqgan_config, args.vqgan_checkpoint).to(
-            self.device
-        )
-        self.perceptor = (
-            clip.load(args.clip_model, jit=False, device=self.device)[0]
-            .eval()
-            .requires_grad_(False)
-            .to(self.device)
-        )
 
-        cut_size = self.perceptor.visual.input_resolution
-
-        f = 2 ** (self.model.decoder.num_resolutions - 1)
-        self.make_cutouts = MakeCutouts(cut_size, args.cutn, cut_pow=args.cut_pow)
-
-        toksX, toksY = args.size[0] // f, args.size[1] // f
-        sideX, sideY = toksX * f, toksY * f
+        toksX, toksY = args.size[0] // self.f, args.size[1] // self.f
+        sideX, sideY = toksX * self.f, toksY * self.f
 
         if args.vqgan_checkpoint == "vqgan_openimages_f16_8192.ckpt":
             e_dim = 256
@@ -120,17 +136,11 @@ class ImageGeneratorGAN:
             else:
                 z = one_hot @ self.model.quantize.embedding.weight
             z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
-            print(z.shape)
             z = torch.rand_like(z) * 2
 
         z_orig = z.clone()
         z.requires_grad_(True)
         opt = optim.Adam([z], lr=args.step_size)
-
-        self.normalize = transforms.Normalize(
-            mean=[0.48145466, 0.4578275, 0.40821073],
-            std=[0.26862954, 0.26130258, 0.27577711],
-        )
 
         pMs = []
         for prompt in args.prompts:
@@ -170,12 +180,12 @@ class ImageGeneratorGAN:
                     args,
                     z_orig,
                     pMs,
-                    filename="test",
-                    path="results",
+                    filename,
+                    path,
                 )
                 if i == max_iterations:
                     lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
-                    self.checkin(i, lossAll, z, args, filename="test", path="results")
+                    self.checkin(i, lossAll, z, args, filename, path)
                     break
                 i += 1
         except KeyboardInterrupt:
@@ -237,8 +247,10 @@ class ImageGeneratorGAN:
         losses_str = ", ".join(f"{loss.item():g}" for loss in losses)
         LOG.info(f"i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}")
         out = self.synth(z, args)
-        TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}_{i}.png")
-        # display.display(display.Image(f"{path}/{filename}_{i}.png"))
+        if i == -1:
+            TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}.png")
+        else:
+            TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}_{i}.png")
 
     def ascend_txt(self, z, perceptor, args, z_orig, pMs):
         global i
