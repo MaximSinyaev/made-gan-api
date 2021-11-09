@@ -17,11 +17,6 @@ app.mount(
 )
 
 
-@app.get("/")
-async def app_root():
-    return "Hi!"
-
-
 @app.api_route("/generate_image", methods=["GET", "POST"])
 async def generate_image(request: Request, background_task: BackgroundTasks):
     text = ""
@@ -47,10 +42,14 @@ async def get_result(request: Request, task_id: str):
         return templates.TemplateResponse(
             "page.html", {"request": request, "generated_image": res.result},
         )
-    text, start_time, current_time, wasted_seconds = celery_inspect(celery_app, task_id)
-    start_time = start_time.strftime("%H:%M:%S")
-    current_time = current_time.strftime("%H:%M:%S")
-    return (
-        f"Статус: {res.status}, Текст: {text}, Время старта: {start_time}, "
-        f"Текущее время: {current_time}, Потрачено секунд: {wasted_seconds}"
-    )
+    try:
+        text, start_time, current_time, wasted_seconds = celery_inspect(celery_app, task_id)
+        start_time = start_time.strftime("%H:%M:%S")
+        current_time = current_time.strftime("%H:%M:%S")
+        return (
+            f"Статус: {res.status}, Текст: {text}, Время старта: {start_time}, "
+            f"Текущее время: {current_time}, Потрачено секунд: {wasted_seconds}"
+        )
+    except KeyError:
+        return "Обновите страницу позднее"
+

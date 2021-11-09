@@ -27,20 +27,6 @@ services:
     volumes:
       - redis_data:/bitnami/redis/data
 
-  fastapi:
-    build: .
-    ports:
-      - "8000:8000"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    restart: on-failure
-    volumes:
-      - ./:/gan_api
-    command: poetry run hypercorn gan_api/src/app/main:app --bind 0.0.0.0:8000 --reload
-
   worker:
     build: .
     depends_on:
@@ -57,6 +43,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  fastapi:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      worker:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - ./:/gan_api
+    command: poetry run hypercorn gan_api/src/app/main:app --bind 0.0.0.0:8000 --reload
 
   celery-flower:
       image: gregsi/latest-celery-flower-docker:latest
