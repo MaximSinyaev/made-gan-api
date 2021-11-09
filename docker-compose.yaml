@@ -15,7 +15,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://user:bitnami@rabbitmq:15672/api/"]
       interval: 20s
-      timeout: 10s
+      timeout: 5s
       retries: 3
 
   redis:
@@ -40,7 +40,7 @@ services:
     command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1 --hostname=gan_worker
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
 
