@@ -2,24 +2,24 @@ version: "3.7"
 
 services:
   rabbitmq:
-    image: "bitnami/rabbitmq:3.7"
+    image: bitnami/rabbitmq:3.7
     ports:
       - "4369:4369"
       - "5672:5672"
       - "25672:25672"
       - "15672:15672"
     volumes:
-      - "rabbitmq_data:/bitnami"
+      - rabbitmq_data:/bitnami
     restart: on-failure
 
   redis:
-    image: "bitnami/redis:6.0.16"
+    image: bitnami/redis:6.0.16
     environment:
       - REDIS_PASSWORD="password123"
     ports:
       - "6379:6379"
     volumes:
-      - "redis_data:/bitnami/redis/data"
+      - redis_data:/bitnami/redis/data
     restart: on-failure
 
   celery-flower:
@@ -50,8 +50,8 @@ services:
       - redis
     restart: on-failure
     volumes:
-      - "./:/app"
-    command: "poetry run hypercorn app/app/main:app --bind 0.0.0.0:8000 --reload"
+      - ./:/gan_api
+    command: poetry run hypercorn gan_api/src/app/main:app --bind 0.0.0.0:8000 --reload
 
   worker:
     build: .
@@ -60,8 +60,8 @@ services:
       - redis
     restart: on-failure
     volumes:
-      - "./:/app"
-    command: "poetry run celery worker -A app.app.worker.celery_worker -l info -Q test-queue -c 1"
+      - ./:/gan_api
+    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1
 
 volumes:
   rabbitmq_data:
