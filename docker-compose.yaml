@@ -1,4 +1,4 @@
-version: "3.7"
+version: "2.1"
 
 services:
   rabbitmq:
@@ -12,6 +12,11 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/bitnami
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://user:bitnami@rabbitmq:15672/api/"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: bitnami/redis:6.0
@@ -27,8 +32,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - rabbitmq
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: on-failure
     volumes:
       - ./:/gan_api
@@ -37,12 +44,19 @@ services:
   worker:
     build: .
     depends_on:
-      - rabbitmq
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: on-failure
     volumes:
       - ./:/gan_api
-    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1
+    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1 --hostname=gan_worker
+    healthcheck:
+      test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   celery-flower:
       image: gregsi/latest-celery-flower-docker:latest
@@ -59,10 +73,14 @@ services:
       ports:
         - "5555:5555"
       depends_on:
-        - rabbitmq
-        - redis
-        - worker
-        - fastapi
+        rabbitmq:
+          condition: service_healthy
+        redis:
+          condition: service_started
+        worker:
+          condition: service_healthy
+        fastapi:
+          condition: service_started
 
 volumes:
   rabbitmq_data:
