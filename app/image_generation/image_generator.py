@@ -1,6 +1,5 @@
 import logging
 import argparse
-import sys
 import os
 
 
@@ -27,7 +26,15 @@ torch.set_num_threads(6)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-class ImageGeneratorGAN:
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class ImageGeneratorGAN(object, metaclass=Singleton):
     model_names = {
         "vqgan_imagenet_f16_16384": "ImageNet 16384",
         "vqgan_imagenet_f16_1024": "ImageNet 1024",
