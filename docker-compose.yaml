@@ -18,21 +18,22 @@ services:
       timeout: 5s
       retries: 3
 
-  redis:
-    image: bitnami/redis:6.0
+  postgresql:
+    image: bitnami/postgresql:13
     environment:
-      - REDIS_PASSWORD="password123"
+      - POSTGRESQL_PASSWORD=password123
+      - POSTGRESQL_DATABASE=gan_api
     ports:
-      - "6379:6379"
+      - "5432:5432"
     volumes:
-      - redis_data:/bitnami/redis/data
+      - postgresql_data:/bitnami/postgresql
 
   worker:
     build: .
     depends_on:
       rabbitmq:
         condition: service_healthy
-      redis:
+      postgresql:
         condition: service_started
     restart: on-failure
     volumes:
@@ -51,7 +52,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      redis:
+      postgresql:
         condition: service_started
       worker:
         condition: service_healthy
@@ -77,7 +78,7 @@ services:
       depends_on:
         rabbitmq:
           condition: service_healthy
-        redis:
+        postgresql:
           condition: service_started
         worker:
           condition: service_healthy
@@ -87,5 +88,5 @@ services:
 volumes:
   rabbitmq_data:
     driver: local
-  redis_data:
+  postgresql_data:
     driver: local

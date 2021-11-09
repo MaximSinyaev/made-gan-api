@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class ImageGeneratorGAN:
-    START_DELAY: ClassVar[int] = 60
+    START_DELAY: ClassVar[int] = 10
     GENERATION_DELAY: ClassVar[int] = 30
     DEFAULT_RESULT: str = "image.png"
 
