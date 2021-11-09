@@ -14,6 +14,7 @@ hypercorn = "^0.10.2"
 celery = "^4.3.0"
 redis = "^3.5.3"
 Jinja2 = "^3.0.2"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.3"

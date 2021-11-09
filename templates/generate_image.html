@@ -1,0 +1,12 @@
+<!doctype html>
+<body>
+
+<title>Generate Image</title>
+
+<form action="{{ url_for('generate_image') }}" method=post>
+	<dl>
+		<dt>Enter text: <br>
+		<dd><textarea name=text rows=5 cols=40>{{ text }}</textarea>
+		<dd><input type=submit value="Generate!">
+	</dl>
+</form>
