@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from celery.result import AsyncResult
@@ -29,15 +29,17 @@ async def generate_image(request: Request):
         response.status_code = 302
         return response
     return templates.TemplateResponse(
-        "generate_image.html", {"request": request, "text": text}
+        os.environ["TEMPLATES_GENERATE_IMAGE_PAGE"], {"request": request, "text": text}
     )
 
 
 @app.get("/tasks/{task_id}")
 async def get_result(request: Request, task_id: str):
     res = AsyncResult(task_id)
+    if res.status == "PENDING":
+        return Response(status_code=404)
     generated_image = res.result if res.ready() else "gen.gif"
     return templates.TemplateResponse(
-        "page.html",
+        os.environ["TEMPLATES_RESULT_PAGE"],
         {"request": request, "status": res.status, "generated_image": generated_image},
     )

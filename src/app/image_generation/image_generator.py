@@ -4,8 +4,8 @@ from typing import ClassVar
 
 class ImageGeneratorGAN:
     START_DELAY: ClassVar[int] = 10
-    GENERATION_DELAY: ClassVar[int] = 30
-    DEFAULT_RESULT: str = "image.png"
+    GENERATION_DELAY: ClassVar[int] = 10
+    DEFAULT_RESULT: str = "harrypotter.png"
 
     def __init__(self):
         self.is_ready = False
