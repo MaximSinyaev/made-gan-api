@@ -55,8 +55,8 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && conda install -y python==3.8.1 \
  && conda clean -ya
 
-RUN conda install -y pytorch torchvision \
-     cudatoolkit=11.1 -c pytorch
+RUN conda install -c pytorch -c conda-forge -y pytorch torchvision \
+     cudatoolkit=11.1 
 
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
