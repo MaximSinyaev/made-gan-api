@@ -9,7 +9,7 @@ from torch import optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
-from CLIP import clip
+from clip import clip
 import kornia.augmentation as K
 import numpy as np
 import imageio
