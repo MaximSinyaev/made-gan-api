@@ -3,8 +3,8 @@ FROM nvidia/cuda:11.1-base-ubuntu18.04 as run-image
 
 
 ENV CELERY_GENERATE_IMAGE_TASK_NAME=gan_api.src.app.worker.celery_worker.generate_image
-ENV STATIC_DIRECTORY=/static
-ENV TEMPLATES_DIRECTORY=/templates
+ENV STATIC_DIRECTORY=/app/static
+ENV TEMPLATES_DIRECTORY=/app/templates
 ENV TEMPLATES_GENERATE_IMAGE_PAGE=generate_image.html
 ENV TEMPLATES_RESULT_PAGE=result.html
 ENV CELERY_BROKER_URL=amqp://user:bitnami@rabbitmq:5672//
