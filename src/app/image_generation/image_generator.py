@@ -18,7 +18,7 @@ from PIL import ImageFile, Image
 
 # from app.configs.consts import model_names
 # from app.image_generation.utils import *
-from utils import *
+from .utils import *
 
 
 logging.basicConfig(level=logging.INFO)
