@@ -37,13 +37,13 @@ services:
         condition: service_started
     restart: on-failure
     volumes:
-      - ./:/gan_api
+      - ./:/app/gan_api
     command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1 --hostname=gan_worker
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
-      interval: 20s
-      timeout: 10s
-      retries: 3
+      interval: 30s
+      timeout: 20s
+      retries: 5
 
   fastapi:
     build: .
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
     restart: on-failure
     volumes:
-      - ./:/gan_api
+      - ./:/app/gan_api
     command: poetry run hypercorn gan_api/src/app/main:app --bind 0.0.0.0:8000 --reload
 
   celery-flower:
