@@ -2,7 +2,7 @@
 name = "made-gan-api"
 version = "0.1.0"
 description = "FastAPI with Celery tasks minimal example"
-authors = ["Grega Vrbančič <grega.vrbancic@gmail.com>"]
+authors = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -15,10 +15,29 @@ celery = "^4.3.0"
 Jinja2 = "^3.0.2"
 python-multipart = "^0.0.5"
 psycopg2-binary = "^2.9.1"
+numpy = "1.21.1"
+kornia = "0.6.1"
+omegaconf = "^2.1.1"
+torch = "1.10.0"
+torchvision = "0.11.1"
+ftfy = "^6.0.3"
+regex = "^2021.11.10"
+tqdm = "^4.62.3"
+pytorch-lightning = "^1.5.1"
+imageio-ffmpeg = "^0.4.5"
+einops = "^0.3.2"
+imageio = "^2.10.3"
+Pillow = "^8.4.0"
+clip = {git = "https://github.com/openai/CLIP", rev = "main"}
+taming-transformers = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.3"
+poethepoet = "^0.10.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.poe.tasks]
+force-cuda-task = "pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html"

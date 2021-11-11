@@ -9,7 +9,7 @@ from torch import optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
-from CLIP import clip
+from clip import clip
 import kornia.augmentation as K
 import numpy as np
 import imageio
@@ -17,7 +17,7 @@ from PIL import ImageFile, Image
 
 
 # from app.configs.consts import model_names
-from app.image_generation.utils import *
+from .utils import *
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
