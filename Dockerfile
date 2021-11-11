@@ -58,10 +58,6 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
     pip install --no-cache-dir poetry && \
     poetry install
 
-# # CUDA 10.2-specific steps
-RUN conda install -y -c pytorch -c conda-forge\
-     pytorch==1.8.0 cudatoolkit=11.1
-
 
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
@@ -69,6 +65,5 @@ RUN pip install --no-cache-dir -r /requirements.txt
 ENV PYTHONPATH=${PYTHONPATH}:/app
 
 COPY ./src /app/src
-
 
 EXPOSE 8000
