@@ -31,13 +31,13 @@ RUN curl -L -o models/vqgan_imagenet_f16_16384.ckpt -C - 'https://heibox.uni-hei
 
 
 COPY pyproject.toml poetry.lock ./
-COPY static/ /static/
-COPY templates/ /templates/
+COPY static/ ./static/
+COPY templates/ ./templates/
 
 # Create a non-root user and switch to it
 RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
-RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
+# RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 USER user
 
 # All users can use /home/user as their home directory
