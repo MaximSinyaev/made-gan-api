@@ -30,7 +30,7 @@ RUN curl -L -o models/vqgan_imagenet_f16_16384.yaml -C - 'https://heibox.uni-hei
 RUN curl -L -o models/vqgan_imagenet_f16_16384.ckpt -C - 'https://heibox.uni-heidelberg.de/d/a7530b09fed84f80a887/files/?p=%2Fckpts%2Flast.ckpt&dl=1' #ImageNet 16384
 
 
-COPY pyproject.toml poetry.lock ./
+# COPY pyproject.toml poetry.lock ./
 COPY static/ ./static/
 COPY templates/ ./templates/
 
@@ -53,11 +53,6 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && rm ~/miniconda.sh \
  && conda install -y python==3.8.1 \
  && conda clean -ya
-
- RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir poetry && \
-    poetry install
-
 
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
