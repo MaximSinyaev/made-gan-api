@@ -35,6 +35,13 @@ services:
         condition: service_healthy
       postgresql:
         condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['5']
+            capabilities: [gpu]
     restart: on-failure
     volumes:
       - ./:/app/gan_api
@@ -44,6 +51,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 5
+    
 
   fastapi:
     build: .
