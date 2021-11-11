@@ -15,7 +15,9 @@ ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql/gan_api
 ENV CELERY_QUEUE_NAME=gan-queue
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir poetry && \
-    poetry install
+    pip install --no-cache-dir poetry &&  \
+    poetry install && \
+    pip install poethepoet &&  \
+    poe force-cuda-task
 
 EXPOSE 8000
