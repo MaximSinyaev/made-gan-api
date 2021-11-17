@@ -43,7 +43,6 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
 
-LABEL maintainer="maxim.sinyaev@ihsmarkit.com"
 ENV PYTHONPATH=${PYTHONPATH}:/app
 
 COPY torch_models /app/torch_models
