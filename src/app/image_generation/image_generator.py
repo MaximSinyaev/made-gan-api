@@ -190,6 +190,7 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
                     filename,
                     path,
                 )
+                LOG.debug(f'Epoch {i} done')
                 if i == max_iterations:
                     lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
                     self.checkin(i, lossAll, z, args, filename, path)

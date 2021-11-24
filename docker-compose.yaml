@@ -42,13 +42,20 @@ services:
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
       interval: 30s
-      timeout: 20s
-      retries: 5
+      timeout: 30s
+      retries: 6
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['5']
+            capabilities: [gpu]
 
   fastapi:
     build: .
     ports:
-      - "8000:8000"
+      - "8008:8000"
     depends_on:
       rabbitmq:
         condition: service_healthy
