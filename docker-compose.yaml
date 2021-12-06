@@ -19,7 +19,7 @@ services:
       retries: 3
 
   postgresql:
-    image: bitnami/postgresql:13
+    image: bitnami/postgresql:14
     environment:
       - POSTGRESQL_PASSWORD=password123
       - POSTGRESQL_DATABASE=gan_api
@@ -38,19 +38,12 @@ services:
     restart: on-failure
     volumes:
       - ./:/app/gan_api
-    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -c 1 --hostname=gan_worker
+    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -P solo -c 1 --hostname=gan_worker
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
       interval: 30s
       timeout: 30s
       retries: 6
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            device_ids: ['5']
-            capabilities: [gpu]
 
   fastapi:
     build: .
