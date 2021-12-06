@@ -25,8 +25,7 @@ async def generate_image(request: Request):
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text]
         )
-        response = RedirectResponse(url=f"/tasks/{task.id}")
-        response.status_code = 302
+        response = RedirectResponse(url=f"/tasks/{task.id}", status_code=302)
         return response
     return templates.TemplateResponse(
         os.environ["TEMPLATES_GENERATE_IMAGE_PAGE"], {"request": request, "text": text}
