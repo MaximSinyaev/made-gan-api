@@ -38,7 +38,7 @@ services:
     restart: on-failure
     volumes:
       - ./:/app/gan_api
-    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -l info -Q gan-queue -P solo -c 1 --hostname=gan_worker
+    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 1 --hostname=gan_worker
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
       interval: 30s
