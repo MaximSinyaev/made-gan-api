@@ -39,11 +39,18 @@ services:
     volumes:
       - ./:/app/gan_api
     command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 1 --hostname=gan_worker
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['5']
+            capabilities: [gpu]
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
-      interval: 30s
+      interval: 60s
       timeout: 30s
-      retries: 6
+      retries: 7
 
   fastapi:
     build: .

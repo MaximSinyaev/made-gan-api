@@ -190,7 +190,7 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
                     filename,
                     path,
                 )
-                LOG.debug(f'Epoch {i} done')
+                LOG.info(f'Epoch {i} done')
                 if i == max_iterations:
                     lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
                     self.checkin(i, lossAll, z, args, filename, path)
@@ -279,7 +279,7 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
             out.mul(255).clamp(0, 255)[0].cpu().detach().numpy().astype(np.uint8)
         )[:, :, :]
         img = np.transpose(img, (1, 2, 0))
-        imageio.imwrite("./steps/" + str(i) + ".png", np.array(img))
+        # imageio.imwrite("./results/" + str(i) + ".png", np.array(img))
 
         return result
 
