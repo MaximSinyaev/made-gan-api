@@ -4,6 +4,7 @@ import os
 
 
 from PIL import Image
+import PIL
 import torch
 from torch import optim
 from torch.nn import functional as F
@@ -89,15 +90,17 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
     def generate_picture(
         self,
         texts,
+        filename, #task id
         init_image="None",
         target_images=None,
         width=256,
         height=256,
         seed=-1,
         max_iterations=500,
-        filename="test",
         path="results",
     ):
+        if not isinstance(filename, str):
+            filename = str(filename)
         args = self.set_model_params(
             texts, init_image, target_images, width, height, seed
         )
@@ -193,11 +196,13 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
                 LOG.info(f'Epoch {i} done')
                 if i == max_iterations:
                     lossAll = self.ascend_txt(z, self.perceptor, args, z_orig, pMs)
-                    self.checkin(i, lossAll, z, args, filename, path)
+                    pil_image = self.checkin(i, lossAll, z, args, filename, path)
                     break
                 i += 1
         except KeyboardInterrupt:
             pass
+
+        return pil_image
 
     def set_model_params(self, texts, init_image, target_images, width, height, seed):
         if seed is None or seed == -1:
@@ -255,10 +260,14 @@ class ImageGeneratorGAN(object, metaclass=Singleton):
         losses_str = ", ".join(f"{loss.item():g}" for loss in losses)
         LOG.info(f"i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}")
         out = self.synth(z, args)
-        if i == -1:
-            TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}.png")
-        else:
-            TF.to_pil_image(out[0].cpu()).save(f"{path}/{filename}_{i}.png")
+        pil_image = TF.to_pil_image(out[0].cpu())
+
+
+        pil_image.save(f"{path}/{filename}.png")
+
+        return pil_image
+
+        
 
     def ascend_txt(self, z, perceptor, args, z_orig, pMs):
         global i
