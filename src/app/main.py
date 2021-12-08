@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from celery.result import AsyncResult
 from starlette.responses import RedirectResponse
-import PIL
+from PIL import Image
 
 from worker.celery_app import celery_app
 
@@ -40,7 +40,7 @@ async def get_result(request: Request, task_id: str):
     if res.status == "PENDING":
         return Response(status_code=404)
     generated_image = res.result if res.ready() else "gen.gif"
-    if isinstance(generate_image, PIL.Image.Image):
+    if isinstance(generate_image, Image.Image):
         generate_image.save(os.path.join(os.environ["STATIC_DIRECTORY"], 'results', f'{task_id}.png'))
         generated_image = f'results/{task_id}.png'
     return templates.TemplateResponse(

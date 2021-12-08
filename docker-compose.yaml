@@ -49,7 +49,7 @@ services:
     healthcheck:
       test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
       interval: 60s
-      timeout: 10s
+      timeout: 60s
       retries: 5
 
   fastapi:
