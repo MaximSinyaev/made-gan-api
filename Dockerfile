@@ -9,6 +9,7 @@ ENV CELERY_BROKER_URL=amqp://user:bitnami@rabbitmq:5672//
 ENV CELERY_BROKER_API_URL=http://user:bitnami@rabbitmq:15672/api/
 ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql/gan_api
 ENV CELERY_QUEUE_NAME=gan-queue
+ENV PG_CONNECTION_STRING="postgresql://postgres:password123@postgresql:5432/gan_api?gssencmode=disable"
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
