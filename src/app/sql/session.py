@@ -38,6 +38,6 @@ class PostgreSQLSession:
             f"      where "
             f"          task_id = '{task_id}'"
             f"  ) "
-            f"  and status != 'SUCCESS'"
+            f"  and status not in ('SUCCESS', 'FAILURE')"
         ).squeeze().item()
         return queue_position
