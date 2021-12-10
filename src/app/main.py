@@ -6,6 +6,7 @@ from celery.result import AsyncResult
 from starlette.responses import RedirectResponse
 from PIL import Image
 from src.app.image_generation.image_generator import LOG
+from src.app.translation.text_translator import TextTranslator
 
 from worker.celery_app import celery_app
 from sql.session import PostgreSQLSession
@@ -24,13 +25,14 @@ result_directory = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'resul
 if not os.path.exists(result_directory):
     os.makedirs(result_directory)
 
+translator = TextTranslator()
 
 @app.api_route("/generate_image", methods=["GET", "POST"])
 async def generate_image(request: Request):
     text = ""
     if request.method == "POST":
         form = await request.form()
-        text = form["text"]
+        text = translator.translate_to_en(form["text"])
         text_hash = hash(text)
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]
@@ -75,7 +77,7 @@ def read_image(img_path):
 async def generate_image_tg(request: Request):
     if request.method == "POST":
         body = await request.body()
-        text = body.decode()
+        text = translator.translate_to_en(body.decode())
         text_hash = hash(text)
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]
