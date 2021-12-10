@@ -93,6 +93,16 @@ services:
         fastapi:
           condition: service_started
 
+  bot-service:
+    build: .
+    depends_on:
+      fastapi:
+        condition: service_started
+    restart: on-failure
+    volumes:
+      - ./:/app/gan_api
+    command: python3 src/tg_bot/bot.py
+
 volumes:
   rabbitmq_data:
     driver: local

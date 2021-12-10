@@ -52,6 +52,8 @@ RUN poetry install && \
     pip3 install poethepoet && \
     poe force-cuda-task
 
+RUN pip install --no-cache-dir requests pyTelegramBotAPI
+
 ENV PYTHONPATH=${PYTHONPATH}:/app
 
 COPY ./src /app/src
