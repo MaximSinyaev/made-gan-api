@@ -51,7 +51,7 @@ async def get_result(request: Request, task_id: str):
     image_path = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results', f'{task_id}.png')
     if os.path.exists(image_path):
         LOG.info(f'Task already done image path is: {image_path}')
-        image_path.replace('/app/', '../')
+        image_path = image_path.replace('/app/', '../')
         return templates.TemplateResponse(
             os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
             {"request": request, "generated_image": image_path},
