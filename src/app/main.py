@@ -23,6 +23,7 @@ async def generate_image(request: Request):
     text = ""
     if request.method == "POST":
         form = await request.form()
+        LOG.info(f"{form}")
         text = form["text"]
         text_hash = hash(text)
         task = celery_app.send_task(
@@ -37,17 +38,24 @@ async def generate_image(request: Request):
 
 @app.get("/tasks/{task_id}")
 async def get_result(request: Request, task_id: str):
+    image_path = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results', f'{task_id}.png')
+    if os.path.exists(image_path):
+        return templates.TemplateResponse(
+            os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
+            {"request": request, "generated_image": image_path},
+        )
+
     res = AsyncResult(task_id)
     if res.status == "PENDING":
         return Response(status_code=404)
     generated_image = res.result if res.ready() else "gen.gif"
     LOG.info(f'generated image: {generated_image}, task result {res.result}, task state: {res.ready()}')
     if isinstance(generated_image, Image.Image):
-        generated_image.save(os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results', f'{task_id}.png'))
+        generated_image.save(image_path)
         generated_image = f'results/{task_id}.png'
         LOG.info(f'New image: {generated_image}')
         LOG.info(f'{os.listdir(os.path.join(os.environ["STATIC_DIRECTORY"], "results"))}')
     return templates.TemplateResponse(
-        os.environ["TEMPLATES_RESULT_PAGE"],
+        os.environ["DYNAMIC_TEMPLATES_RESULT_PAGE"],
         {"request": request, "status": res.status, "generated_image": generated_image},
     )

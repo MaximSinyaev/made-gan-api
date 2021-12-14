@@ -1,11 +1,18 @@
 <!doctype html>
 
-<title>Generating Image</title>
+<title>Image generation service</title>
 
-<form action="{{ url_for('generate_image') }}" method=post>
-	<dl>
-		<dt>Enter text:</dt> <br>
-		<dd><textarea name=text rows=5 cols=40>{{ text }}</textarea>
-		<dd><input type=submit value="Generate!">
-	</dl>
-</form>
+<body>
+	<p>Сервис по генерации изображений на основе пользоательских фраз, поддерживаемые на данный момент языки [EN]. Проект выполнен гркппой студентов MADE.<p>
+
+	<form action="{{ url_for('generate_image') }}" method=post>
+		<dl>
+			<dt>Enter text:</dt> <br>
+			<dd><textarea name=text rows=5 cols=40 required>{{ text }}</textarea>
+			<dd>
+				<input required name=width placeholder=256>
+				<input required name=height placeholder=256>
+			<dd><input type=submit value="Generate!">
+		</dl>
+	</form>
+</body>
