@@ -8,6 +8,9 @@ from PIL import Image
 from src.app.image_generation.image_generator import LOG
 
 from worker.celery_app import celery_app
+from sql.session import PostgreSQLSession
+
+pg = PostgreSQLSession(os.environ["PG_CONNECTION_STRING"])
 
 templates = Jinja2Templates(directory=os.environ["TEMPLATES_DIRECTORY"])
 
@@ -16,6 +19,10 @@ app.mount(
     "/static",
     StaticFiles(directory=os.environ["STATIC_DIRECTORY"]),
 )
+
+result_directory = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results')
+if not os.path.exists(result_directory):
+    os.makedirs(result_directory)
 
 
 @app.api_route("/generate_image", methods=["GET", "POST"])
@@ -49,12 +56,16 @@ async def get_result(request: Request, task_id: str):
     if res.status == "PENDING":
         return Response(status_code=404)
     generated_image = res.result if res.ready() else "gen.gif"
-    LOG.info(f'generated image: {generated_image}, task result {res.result}, task state: {res.ready()}')
+    # LOG.info(f'generated image: {generated_image}, task result {res.result}, task state: {res.ready()}')
     if isinstance(generated_image, Image.Image):
         generated_image.save(image_path)
         generated_image = f'results/{task_id}.png'
-        LOG.info(f'New image: {generated_image}')
-        LOG.info(f'{os.listdir(os.path.join(os.environ["STATIC_DIRECTORY"], "results"))}')
+        # LOG.info(f'New image: {generated_image}')
+        # LOG.info(f'{os.listdir(os.path.join(os.environ["STATIC_DIRECTORY"], "results"))}')
+    status = res.status
+    if not res.ready():
+        queue_position = pg.get_queue_position(task_id)
+        status += f" (Ваше место в очереди: {queue_position})"
     return templates.TemplateResponse(
         os.environ["DYNAMIC_TEMPLATES_RESULT_PAGE"],
         {"request": request, "status": res.status, "generated_image": generated_image},
