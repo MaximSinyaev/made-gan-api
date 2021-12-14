@@ -1,0 +1,116 @@
+version: "2.1"
+
+services:
+  rabbitmq:
+    image: bitnami/rabbitmq:3.9
+    environment:
+      - RABBITMQ_PLUGINS=rabbitmq_management
+    ports:
+      - "4369:4369"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/bitnami
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://user:bitnami@rabbitmq:15672/api/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  postgresql:
+    image: bitnami/postgresql:14
+    environment:
+      - POSTGRESQL_PASSWORD=password123
+      - POSTGRESQL_DATABASE=gan_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/bitnami/postgresql
+
+  worker:
+    build: .
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgresql:
+        condition: service_started
+    restart: on-failure
+    volumes:
+      - ./:/app/gan_api
+    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4 --hostname=gan_worker
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['5']
+            capabilities: [gpu]
+    healthcheck:
+      test: poetry run celery inspect ping -A src.app.worker.celery_app -d celery@gan_worker
+      interval: 60s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+
+  fastapi:
+    build: .
+    ports:
+      - "8008:8000"
+    user: root
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgresql:
+        condition: service_started
+      worker:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      # - ./:/app/gan_api
+      - ./templates:/app/templates
+      - ./static:/app/static
+    command: poetry run hypercorn src/app/main:app --bind 0.0.0.0:8000 --reload
+
+  celery-flower:
+      image: gregsi/latest-celery-flower-docker:latest
+      environment:
+        - AMQP_USERNAME=user
+        - AMQP_PASSWORD=bitnami
+        - AMQP_ADMIN_USERNAME=user
+        - AMQP_ADMIN_PASSWORD=bitnami
+        - AMQP_HOST=rabbitmq
+        - AMQP_PORT=5672
+        - AMQP_ADMIN_HOST=rabbitmq
+        - AMQP_ADMIN_PORT=15672
+        - FLOWER_BASIC_AUTH=user:test
+      ports:
+        - "5555:5555"
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
+        postgresql:
+          condition: service_started
+        worker:
+          condition: service_healthy
+        fastapi:
+          condition: service_started
+
+  bot-service:
+    build: src/tg_bot
+    user: root
+    depends_on:
+      fastapi:
+        condition: service_started
+    restart: on-failure
+    environment:
+        - FASTAPI_HOST=http://fastapi:8000
+        - STATIC_PATH=/app/static
+    volumes:
+      - ./static:/app/static
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  postgresql_data:
+    driver: local
