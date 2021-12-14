@@ -32,11 +32,12 @@ async def generate_image(request: Request):
     text = ""
     if request.method == "POST":
         form = await request.form()
-        LOG.info(f"{form}")
         text = translator.translate_to_en(form["text"])
+        width = form['width']
+        height = form['height']
         text_hash = hash(text)
         task = celery_app.send_task(
-            os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]
+            os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash, width, height]
         )
         response = RedirectResponse(url=f"/tasks/{task.id}", status_code=302)
         return response
@@ -49,6 +50,8 @@ async def generate_image(request: Request):
 async def get_result(request: Request, task_id: str):
     image_path = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results', f'{task_id}.png')
     if os.path.exists(image_path):
+        LOG.info(f'Task already done image path is: {image_path}')
+        image_path.replace('/app/', '../')
         return templates.TemplateResponse(
             os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
             {"request": request, "generated_image": image_path},
@@ -85,7 +88,7 @@ def read_image(img_path):
 async def generate_image_tg(request: Request):
     if request.method == "POST":
         body = await request.body()
-        text = translator.translate_to_en(body.decode())
+        text = translator.translate_to_en(body.decode('utf-8'))
         text_hash = hash(text)
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]

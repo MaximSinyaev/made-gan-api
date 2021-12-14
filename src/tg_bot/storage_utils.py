@@ -6,8 +6,12 @@ import sqlite3
 from sqlite3 import Error
 
 
-BOT_PATH = "/app/gan_api/src/tg_bot/"
-STORAGE = os.path.join(BOT_PATH, "storage/bot_db.db")
+BOT_PATH = os.path.abspath(os.getcwd())
+STATIC_PATH = os.getenv("STATIC_PATH")
+STORAGE_PATH = os.path.join(STATIC_PATH, "storage")
+STORAGE = os.path.join(STORAGE_PATH, "bot_db.db")
+if not os.path.exists(STORAGE_PATH):
+    os.mkdir(STORAGE_PATH)
 
 
 class ImagesDB:

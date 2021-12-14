@@ -25,6 +25,7 @@ COPY pyproject.toml poetry.lock ./
 RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
 # RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
+RUN chmod 777 /app
 USER user
 
 # All users can use /home/user as their home directory
@@ -44,7 +45,7 @@ RUN poetry install && \
 RUN pip install --no-cache-dir requests pyTelegramBotAPI
 
 ENV PYTHONPATH=${PYTHONPATH}:/app
-ENV CELERY_GENERATE_IMAGE_TASK_NAME=gan_api.src.app.worker.celery_worker.generate_image
+ENV CELERY_GENERATE_IMAGE_TASK_NAME=src.app.worker.celery_worker.generate_image
 ENV STATIC_DIRECTORY=/app/static
 ENV TEMPLATES_DIRECTORY=/app/templates
 ENV TEMPLATES_GENERATE_IMAGE_PAGE=generate_image.html
@@ -57,8 +58,9 @@ ENV CELERY_QUEUE_NAME=gan-queue
 ENV PG_CONNECTION_STRING="postgresql://postgres:password123@postgresql:5432/gan_api?gssencmode=disable"
 
 
+RUN mkdir /app/gan_api
 COPY ./src /app/src
-COPY static/ /app/static
-COPY templates/ /app/templates
+# COPY static/ /app/static
+# COPY templates/ /app/templates
 
 EXPOSE 8000

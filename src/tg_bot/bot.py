@@ -3,10 +3,11 @@ import os
 from storage_utils import ImagesDB
 import service_api
 
-BOT_PATH = "/app/gan_api/src/tg_bot/"
+BOT_PATH = os.path.abspath(os.getcwd())
 
 with open(os.path.join(BOT_PATH, "API_KEY.log"), "rt") as fin:
     API_KEY = fin.read()
+    print(API_KEY)
 
 
 bot = telebot.TeleBot(API_KEY)

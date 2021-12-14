@@ -38,7 +38,7 @@ services:
     restart: on-failure
     volumes:
       - ./:/app/gan_api
-    command: poetry run celery worker -A gan_api.src.app.worker.celery_worker -E -l info -Q gan-queue -P solo --hostname=gan_worker
+    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4 --hostname=gan_worker
     deploy:
       resources:
         reservations:
@@ -47,7 +47,7 @@ services:
             device_ids: ['5']
             capabilities: [gpu]
     healthcheck:
-      test: poetry run celery inspect ping -A gan_api.src.app.worker.celery_app -d celery@gan_worker
+      test: poetry run celery inspect ping -A src.app.worker.celery_app -d celery@gan_worker
       interval: 60s
       timeout: 5s
       retries: 5
@@ -67,8 +67,10 @@ services:
         condition: service_healthy
     restart: on-failure
     volumes:
-      - ./:/app/gan_api
-    command: poetry run hypercorn gan_api/src/app/main:app --bind 0.0.0.0:8000 --reload
+      # - ./:/app/gan_api
+      - ./templates:/app/templates
+      - ./static:/app/static
+    command: poetry run hypercorn src/app/main:app --bind 0.0.0.0:8000 --reload
 
   celery-flower:
       image: gregsi/latest-celery-flower-docker:latest
@@ -95,14 +97,17 @@ services:
           condition: service_started
 
   bot-service:
-    build: .
+    build: src/tg_bot
+    user: root
     depends_on:
       fastapi:
         condition: service_started
     restart: on-failure
+    environment:
+        - FASTAPI_HOST=http://fastapi:8000
+        - STATIC_PATH=/app/static
     volumes:
-      - ./:/app/gan_api
-    command: python3 src/tg_bot/bot.py
+      - ./static:/app/static
 
 volumes:
   rabbitmq_data:

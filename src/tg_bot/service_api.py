@@ -1,9 +1,10 @@
 import hashlib
 import datetime
+import os
 import requests
 import time
 
-API_URL = "http://fastapi:8000"
+API_URL = os.getenv("FASTAPI_HOST")
 N_TRIES = 2
 AWAIT_TIME = 5
 TIME_LIMIT = 60 * 30
@@ -13,8 +14,13 @@ FREQUENCY = 10
 def send_text(text, n_tries=N_TRIES, await_time=AWAIT_TIME):
     data = text
     task_id = None
+    text = text
     for _ in range(n_tries):
-        response = requests.post(API_URL + "/generate_image_tg", data=data)
+        response = requests.post(
+            API_URL + "/generate_image_tg", 
+            data=data.encode('utf-8'),
+            headers={'Content-type': 'text/plain; charset=utf-8'}
+            )
         if response.status_code == 200:
             task_id = response.content
             break
