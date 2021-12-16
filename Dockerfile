@@ -1,5 +1,6 @@
 FROM nvidia/cuda:11.1-base-ubuntu18.04 as run-image
 
+
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
     git \
@@ -9,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     python3.8 \
     python3-pip \
  && rm -rf /var/lib/apt/lists/*
+
 
 # Create a working directory
 RUN mkdir /app
@@ -26,6 +28,7 @@ RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
 # RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 RUN chmod 777 /app
+
 USER user
 
 # All users can use /home/user as their home directory
