@@ -1,12 +1,15 @@
-import telebot
+import datetime
 import os
+import telebot
+
 from storage_utils import ImagesDB
 import service_api
 
-BOT_PATH = "/app/gan_api/src/tg_bot/"
+BOT_PATH = os.path.abspath(os.getcwd())
 
 with open(os.path.join(BOT_PATH, "API_KEY.log"), "rt") as fin:
     API_KEY = fin.read()
+    print(API_KEY)
 
 
 bot = telebot.TeleBot(API_KEY)
@@ -35,7 +38,6 @@ def command_start(message):
     db.add_log("bot", greeting_message, cid)
     if db.check_user_status(cid) == -1:
         db.add_user(cid, name)
-        # db.add_welcome_image(cid)
     command_help(message)
 
 
@@ -52,19 +54,19 @@ def command_help(message):
 def generate_text_handler(message):
     cid = message.chat.id
     db.add_log("user", message.text, cid)
-    task_id = service_api.send_text(message.text)
+    task_id, queue_position = service_api.send_text(message.text)
     flag = False
     if task_id is not None:
-        bot_text = "Please wait, image is generating"
+        bot_text = "Please wait, image is generating.\n" +\
+                   f"Your position in queue: {queue_position}"
         bot.send_message(cid, bot_text)
-        db.add_image(cid, message.text, task_id)
+        db.add_image(cid, message.text, task_id, queue_position)
         db.add_log("bot", bot_text, cid)
         db.update_user_status(cid, 1)
         image = service_api.get_image_loop(task_id)
         if image is None:
             flag = False
         else:
-            # db.update_image_status(cid, task_id, 1)
             bot.send_photo(cid, image)
             db.add_log("bot", f"send image with task_id: {task_id}", cid)
             flag = True
@@ -79,7 +81,19 @@ def generate_text_handler(message):
 def wait_image_handler(message):
     cid = message.chat.id
     db.add_log("user", message.text, cid)
-    bot_text = "Please wait, image is generating. Can generate only one image at time"
+    # some api-fal and restart correction
+    cur_dt = datetime.datetime.now()
+    last_dt = datetime.datetime.fromisoformat(db.get_time_of_last_task(cid))
+    df_diff = cur_dt - last_dt
+    # reset status if user waits too long
+    if df_diff.seconds > service_api.TIME_LIMIT + service_api.FREQUENCY + service_api.AWAIT_TIME:
+        db.update_user_status(cid, 0)
+        db.add_log("system", "hard reset status", cid)
+        generate_text_handler(message)
+        return
+    queue_position = db.check_user_queue_position(cid)
+    bot_text = "Please wait, image is generating. Can generate only one image at time.\n" +\
+               f"Your position in queue: {queue_position}"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 

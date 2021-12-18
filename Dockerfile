@@ -1,15 +1,5 @@
 FROM nvidia/cuda:11.1-base-ubuntu18.04 as run-image
 
-ENV CELERY_GENERATE_IMAGE_TASK_NAME=gan_api.src.app.worker.celery_worker.generate_image
-ENV STATIC_DIRECTORY=/app/static
-ENV TEMPLATES_DIRECTORY=/app/templates
-ENV TEMPLATES_GENERATE_IMAGE_PAGE=generate_image.html
-ENV TEMPLATES_RESULT_PAGE=result.html
-ENV CELERY_BROKER_URL=amqp://user:bitnami@rabbitmq:5672//
-ENV CELERY_BROKER_API_URL=http://user:bitnami@rabbitmq:15672/api/
-ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql/gan_api
-ENV CELERY_QUEUE_NAME=gan-queue
-ENV PG_CONNECTION_STRING="postgresql://postgres:password123@postgresql:5432/gan_api?gssencmode=disable"
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
@@ -20,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     python3.8 \
     python3-pip \
  && rm -rf /var/lib/apt/lists/*
+
 
 # Create a working directory
 RUN mkdir /app
@@ -36,6 +27,8 @@ COPY pyproject.toml poetry.lock ./
 RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
 # RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
+RUN chmod 777 /app
+
 USER user
 
 # All users can use /home/user as their home directory
@@ -55,9 +48,22 @@ RUN poetry install && \
 RUN pip install --no-cache-dir requests pyTelegramBotAPI
 
 ENV PYTHONPATH=${PYTHONPATH}:/app
+ENV CELERY_GENERATE_IMAGE_TASK_NAME=src.app.worker.celery_worker.generate_image
+ENV STATIC_DIRECTORY=/app/static
+ENV TEMPLATES_DIRECTORY=/app/templates
+ENV TEMPLATES_GENERATE_IMAGE_PAGE=generate_image.html
+ENV DYNAMIC_TEMPLATES_RESULT_PAGE=dynamic_result.html
+ENV STATIC_TEMPLATES_RESULT_PAGE=static_result.html
+ENV CELERY_BROKER_URL=amqp://user:bitnami@rabbitmq:5672//
+ENV CELERY_BROKER_API_URL=http://user:bitnami@rabbitmq:15672/api/
+ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql/gan_api
+ENV CELERY_QUEUE_NAME=gan-queue
+ENV PG_CONNECTION_STRING="postgresql://postgres:password123@postgresql:5432/gan_api?gssencmode=disable"
 
+
+RUN mkdir /app/gan_api
 COPY ./src /app/src
-COPY static/ /app/static
-COPY templates/ /app/templates
+# COPY static/ /app/static
+# COPY templates/ /app/templates
 
 EXPOSE 8000
