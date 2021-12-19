@@ -38,7 +38,7 @@ services:
     restart: on-failure
     volumes:
       - ./:/app/gan_api
-    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4 --hostname=gan_worker
+    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4--hostname=gan_worker
     deploy:
       resources:
         reservations:
@@ -51,7 +51,7 @@ services:
       interval: 60s
       timeout: 5s
       retries: 5
-      start_period: 300s
+      start_period: 120s
 
   fastapi:
     build: .
