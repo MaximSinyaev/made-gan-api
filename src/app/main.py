@@ -48,7 +48,14 @@ async def generate_image(request: Request):
 
 @app.get("/tasks/{task_id}")
 async def get_result(request: Request, task_id: str):
+    res = AsyncResult(task_id)
+    if res.status == "PENDING":
+        return Response(status_code=404)
+    generated_image = res.result if res.ready() else "gen.gif"
     image_path = os.path.join(os.environ["STATIC_DIRECTORY"], 'images', 'results', f'{task_id}.png')
+    if isinstance(generated_image, Image.Image):
+        generated_image.save(image_path)
+        generated_image = f'results/{task_id}.png'
     if os.path.exists(image_path):
         LOG.info(f'Task already done image path is: {image_path}')
         image_path = image_path.replace('/app/', '../')
@@ -56,24 +63,11 @@ async def get_result(request: Request, task_id: str):
             os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
             {"request": request, "generated_image": image_path},
         )
-
-    res = AsyncResult(task_id)
-    if res.status == "PENDING":
-        return Response(status_code=404)
-    generated_image = res.result if res.ready() else "gen.gif"
-    # LOG.info(f'generated image: {generated_image}, task result {res.result}, task state: {res.ready()}')
-    if isinstance(generated_image, Image.Image):
-        generated_image.save(image_path)
-        generated_image = f'results/{task_id}.png'
-        # LOG.info(f'New image: {generated_image}')
-        # LOG.info(f'{os.listdir(os.path.join(os.environ["STATIC_DIRECTORY"], "results"))}')
-    status = res.status
-    if not res.ready():
-        queue_position = pg.get_queue_position(task_id)
-        status += f" (Ваше место в очереди: {queue_position})"
+    queue_position = pg.get_queue_position(task_id)
+    status = f"Генерация изображения. Ваше место в очереди: {queue_position}"
     return templates.TemplateResponse(
         os.environ["DYNAMIC_TEMPLATES_RESULT_PAGE"],
-        {"request": request, "status": res.status, "generated_image": generated_image},
+        {"request": request, "status": status, "generated_image": generated_image},
     )
 
 
