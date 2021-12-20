@@ -134,37 +134,36 @@
     </style>
 </head>
 <body>
-	<h1>Генерация изображений по запросу пользователя</h1>
-	<p>Сервис по генерации изображений на основе пользоательских фраз.</p><br>
-	<p>Поддерживаемые на данный момент языки: [<b>EN</b>, <b>RU</b>].</p><br>
-		<!-- <li>Английиский</li>
-		<li>Русский</li>
-	</ul> -->
-	<p>Проект выполнен группой студентов MADE.Руководитель проекта: <b>Андрей Кузнецов</b>.</p>
-	<form action="{{ url_for('generate_image') }}" method=post>
+	<div class="main-block">
+    <form action="{{ url_for('generate_image') }}" method=post>
+      <h1>Генерация изображений по запросу пользователя</h1>
+      <p>Сервис по генерации изображений на основе пользоательских фраз.</p><br>
+      <p>Поддерживаемые на данный момент языки: [<b>EN</b>, <b>RU</b>].</p><br>
+      <p>Проект выполнен группой студентов MADE.Руководитель проекта: <b>Андрей Кузнецов</b>.</p>
 
-		<fieldset>
-			<legend>
-				<h3>Введите текст:</h3>
-			</legend>
-			<div  class="personal-details">
-				<div><textarea name=text rows=5 cols=40 required>Big data academy</textarea></div>
-			</div>
-			<legend>
-				<h3>Параметры генерации:</h3>
-			</legend>
-			<div  class="personal-details">
-				<div><label>Ширина</label><input required name=width placeholder=256 value=256></div>
-				<div><label>Высота</label><input required name=height placeholder=256, value=256></div>
-			</div>
-			<legend>
-				<h3>Стили:</h3>
-			</legend>
-			<div  class="personal-details">
-				<p>Coming Soon</p>
-			</div>
-			</fieldset>
+      <fieldset>
+        <legend>
+          <h3>Введите текст:</h3>
+        </legend>
+        <div  class="personal-details">
+          <div><textarea name=text rows=5 cols=40 required>Big data academy</textarea></div>
+        </div>
+        <legend>
+          <h3>Параметры генерации:</h3>
+        </legend>
+        <div  class="personal-details">
+          <div><label>Ширина</label><input required name=width placeholder=256 value=256></div>
+          <div><label>Высота</label><input required name=height placeholder=256, value=256></div>
+        </div>
+        <legend>
+          <h3>Стили:</h3>
+        </legend>
+        <div  class="personal-details">
+          <p>Coming Soon</p>
+        </div>
+        </fieldset>
 
-			<button type=submit>Сгенерировать!</button>
-	</form>
+        <button type=submit>Сгенерировать!</button>
+    </form>
+  </div>
 </body>

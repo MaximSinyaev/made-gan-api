@@ -72,11 +72,14 @@ async def get_result(request: Request, task_id: str):
             os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
             {"request": request, "generated_image": image_path},
         )
-    queue_position = pg.get_queue_position(task_id)
-    status = f"Генерация изображения. Примерное время ожидания: {2 * queue_position} минут."
+    queue_position = int(pg.get_queue_position(task_id)) - 12
+    time_delay = 2 * queue_position
+
+    # status = f"Генерация изображения. Примерное время ожидания: {2 * queue_position} минут."
+
     return templates.TemplateResponse(
         os.environ["DYNAMIC_TEMPLATES_RESULT_PAGE"],
-        {"request": request, "status": status, "generated_image": generated_image},
+        {"request": request, "status": res.status, "generated_image": generated_image, "time_delay": time_delay},
     )
 
 
@@ -96,7 +99,7 @@ async def generate_image_tg(request: Request):
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]
         )
-        queue_position = pg.get_queue_position(task.id)
+        queue_position = int(pg.get_queue_position(task.id)) - 12
         response = Response(content=",".join([task.id, str(queue_position)]), status_code=200)
         return response
     else:

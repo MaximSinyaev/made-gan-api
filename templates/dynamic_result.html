@@ -1,11 +1,47 @@
 <!doctype html>
-<body style="align: center">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600' rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+    <style>
+      html, body {
+      min-height: 100%;
+	  align-items: center;
+	  margin: 40px;
+      }
+      body, div, form, input, select, p { 
+      padding: 0;
+      margin: 0;
+      outline: none;
+      font-family: Roboto, Arial, sans-serif;
+      font-size: 14px;
+      color: #666;
+      }
+      .main-block {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #fff;
+        }
+    img {
+        border-radius: 10px;
+        border: black 2px;
+        padding: 5px;
+    }
+    </style>
+</head>
+<body>
 
 <title>Создание вашего изображения</title>
 
 <meta http-equiv="refresh" content="2">
 
-<br>Генерация изображения, статус задачи: {{ status }}<br>
+<div class="main-block">
+    <div>
+        <h1>Генерация изображения в процессе...</h1>
+        <p>Задача отправлена в работу, статус задачи: {{ status }}</p><br>
+        <p>Примерное время ожидания: {{ time_delay }} минут.</p>
   
-<img src="../static/images/{{ generated_image }}" width=500, height=500>
+        <img src="../static/images/{{ generated_image }}" width=500, height=500>
+    </div>
+</div>
 </body>
