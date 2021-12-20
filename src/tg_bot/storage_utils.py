@@ -32,7 +32,7 @@ class ImagesDB:
         """
         create_table_images_sql = """
         CREATE TABLE IMAGES
-        (ID INTEGER PRIMARY KEY, DATETIME TEXT, TEXT TEXT, UID TEXT, TASK_ID TEXT, STATUS INTEGER)
+        (ID INTEGER PRIMARY KEY, DATETIME TEXT, TEXT TEXT, UID TEXT, TASK_ID TEXT, STATUS INTEGER, QUEUE_POSITION INTEGER)
         """
         cur = conn.cursor()
         cur.execute(create_table_users_sql)
@@ -81,15 +81,15 @@ class ImagesDB:
         conn.commit()
         conn.close()
 
-    def add_image(self, uid, text, task_id, status=0):
+    def add_image(self, uid, text, task_id, queue_position, status=0):
         conn = self.create_connection(self.storage)
         cur = conn.cursor()
         current_datetime = datetime.datetime.now().isoformat()
         add_image_sql = f"""
         INSERT INTO IMAGES 
-        (DATETIME, UID, TEXT, TASK_ID, STATUS)
+        (DATETIME, UID, TEXT, TASK_ID, STATUS, QUEUE_POSITION)
         VALUES
-        ('{current_datetime}', '{uid}', '{text}', '{task_id}', {status})
+        ('{current_datetime}', '{uid}', '{text}', '{task_id}', {status}, {int(queue_position)})
         """
         cur.execute(add_image_sql)
         conn.commit()
@@ -99,53 +99,44 @@ class ImagesDB:
         conn = self.create_connection(self.storage)
         cur = conn.cursor()
         update_image_status_sql = f"""
-                                UPDATE IMAGES 
-                                SET STATUS = {status}
-                                WHERE IMAGES.UID = {uid}
-                                AND IMAGES.TASK_ID = {task_id}
-                                """
+        UPDATE IMAGES 
+        SET STATUS = {status}
+        WHERE IMAGES.UID = '{uid}'
+        AND IMAGES.TASK_ID = '{task_id}'
+        """
         cur.execute(update_image_status_sql)
         conn.commit()
         conn.close()
 
-    # def add_welcome_image(self, uid):
-    #     img_index = random.randint(0, len(img_list) - 1)
-    #     self.add_image(uid, img_list[img_index])
+    def update_image_queue_position(self, task_id, queue_position):
+        conn = self.create_connection(self.storage)
+        cur = conn.cursor()
+        update_image_queue_position_sql = f"""
+        UPDATE IMAGES 
+        SET QUEUE_POSITION = {int(queue_position)}
+        WHERE IMAGES.TASK_ID = '{task_id}'
+        """
+        cur.execute(update_image_queue_position_sql)
+        conn.commit()
+        conn.close()
 
-    # def get_user_images_list(self, uid):
-    #     conn = self.create_connection(self.storage)
-    #     cur = conn.cursor()
-    #     get_user_images_list_sql = f"""
-    #     SELECT IMAGE_PATH FROM IMAGES
-    #     WHERE IMAGES.UID = {uid}
-    #     ORDER BY DATETIME
-    #     """
-    #     images_list = []
-    #     for res in cur.execute(get_user_images_list_sql):
-    #         images_list.append(res[0])
-    #     conn.close()
-    #     return images_list
-
-    # def get_image(self, uid, number):
-    #     image_path = None
-    #     res_list = []
-    #     conn = self.create_connection(self.storage)
-    #     cur = conn.cursor()
-    #
-    #     get_image_sql = f"""
-    #     SELECT TMP.IMAGE_PATH
-    #     FROM
-    #         (SELECT IMAGE_PATH, ROW_NUMBER() OVER(PARTITION BY UID ORDER BY DATETIME) as RN
-    #         FROM IMAGES
-    #         WHERE IMAGES.UID = {uid}) TMP
-    #     WHERE TMP.RN = {number}
-    #     """
-    #     for res in cur.execute(get_image_sql):
-    #         res_list.append(res[0])
-    #     if len(res_list) > 0:
-    #         image_path = res_list[0]
-    #     conn.close()
-    #     return image_path
+    def check_user_queue_position(self, uid):
+        queue_position = 0
+        res_list = []
+        conn = self.create_connection(self.storage)
+        cur = conn.cursor()
+        check_queue_position_sql = f"""
+        SELECT QUEUE_POSITION, DATETIME FROM IMAGES
+        WHERE IMAGES.UID = {uid}
+        ORDER BY DATETIME DESC
+        LIMIT 1
+        """
+        for res in cur.execute(check_queue_position_sql):
+            res_list.append(res[0])
+        if len(res_list) > 0:
+            queue_position = res_list[0]
+        conn.close()
+        return queue_position
 
     def check_user(self, uid):
         flag = False
@@ -167,23 +158,40 @@ class ImagesDB:
         conn = self.create_connection(self.storage)
         cur = conn.cursor()
         check_user_sql = f"""
-                SELECT STATUS FROM USERS
-                WHERE USERS.TELEGRAM_ID = {uid}
-                """
+        SELECT STATUS FROM USERS
+        WHERE USERS.TELEGRAM_ID = {uid}
+        """
         for res in cur.execute(check_user_sql):
             res_list.append(res[0])
         if len(res_list) > 0:
             status = res_list[0]
+        conn.close()
         return status
 
     def update_user_status(self, uid, status):
         conn = self.create_connection(self.storage)
         cur = conn.cursor()
         update_user_status_sql = f"""
-                        UPDATE USERS 
-                        SET STATUS = {status}
-                        WHERE USERS.TELEGRAM_ID = {uid}
-                        """
+        UPDATE USERS 
+        SET STATUS = {status}
+        WHERE USERS.TELEGRAM_ID = {uid}
+        """
         cur.execute(update_user_status_sql)
         conn.commit()
         conn.close()
+
+    def get_time_of_last_task(self, uid):
+        last_dt = None
+        res_list = []
+        conn = self.create_connection(self.storage)
+        cur = conn.cursor()
+        get_last_dt_sql = f"""
+        SELECT MAX(DATETIME) FROM IMAGES
+        WHERE IMAGES.UID = {uid}
+        """
+        for res in cur.execute(get_last_dt_sql):
+            res_list.append(res[0])
+        if len(res_list) > 0:
+            last_dt = res_list[0]
+        conn.close()
+        return last_dt

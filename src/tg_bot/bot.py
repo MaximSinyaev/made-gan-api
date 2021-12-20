@@ -1,5 +1,7 @@
-import telebot
+import datetime
 import os
+import telebot
+
 from storage_utils import ImagesDB
 import service_api
 
@@ -31,12 +33,12 @@ def command_start(message):
     cid = message.chat.id
     name = message.from_user.username
     db.add_log("user", message.text, cid)
-    greeting_message = "Hello, this is an illustration bot! Glad to see you here!"
+    # greeting_message = "Hello, this is an illustration bot! Glad to see you here!"
+    greeting_message = "Привет, это бот для генерации иллюстраций! Рад видеть тебя в этом чате!"
     bot.send_message(cid, greeting_message)
     db.add_log("bot", greeting_message, cid)
     if db.check_user_status(cid) == -1:
         db.add_user(cid, name)
-        # db.add_welcome_image(cid)
     command_help(message)
 
 
@@ -44,7 +46,10 @@ def command_start(message):
 @bot.message_handler(commands=['help'])
 def command_help(message):
     cid = message.chat.id
-    help_text = "Write some text and awesome neural network will draw an illustration for you!"
+    # help_text = "Write some text and awesome neural network will draw an illustration for you!"
+    help_text = "Напиши текст, который хочешь визуализировать, и классная нейронная сеть нарисует для тебя иллюстрацию!"+\
+                "\nДля добавления стиля его можно написать через `|`. Например вот так: 'Омар | рисунок карандашом' или"+\
+                "'Кристал | Пикассо'"
     bot.send_message(cid, help_text)  # send the generated help page
     db.add_log("bot", help_text, cid)
 
@@ -53,24 +58,27 @@ def command_help(message):
 def generate_text_handler(message):
     cid = message.chat.id
     db.add_log("user", message.text, cid)
-    task_id = service_api.send_text(message.text)
+    task_id, queue_position = service_api.send_text(message.text)
     flag = False
     if task_id is not None:
-        bot_text = "Please wait, image is generating"
+        # bot_text = "Please wait, image is generating.\n" +\
+        #            f"Your position in queue: {queue_position}"
+        bot_text = "Подожди, пожалуйста. Нейронная уже готовит краски, скоро картинка будет готова!\n" + \
+                   f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
         bot.send_message(cid, bot_text)
-        db.add_image(cid, message.text, task_id)
+        db.add_image(cid, message.text, task_id, queue_position)
         db.add_log("bot", bot_text, cid)
         db.update_user_status(cid, 1)
         image = service_api.get_image_loop(task_id)
         if image is None:
             flag = False
         else:
-            # db.update_image_status(cid, task_id, 1)
             bot.send_photo(cid, image)
             db.add_log("bot", f"send image with task_id: {task_id}", cid)
             flag = True
     if not flag:
-        bot_text = "Something went wrong, please try again later"
+        # bot_text = "Something went wrong, please try again later"
+        bot_text = "Что-то пошло не так, пожалуйста, попробуй позже."
         bot.send_message(cid, bot_text)
         db.add_log("bot", bot_text, cid)
     db.update_user_status(cid, 0)
@@ -80,7 +88,21 @@ def generate_text_handler(message):
 def wait_image_handler(message):
     cid = message.chat.id
     db.add_log("user", message.text, cid)
-    bot_text = "Please wait, image is generating. Can generate only one image at time"
+    # some api-fal and restart correction
+    cur_dt = datetime.datetime.now()
+    last_dt = datetime.datetime.fromisoformat(db.get_time_of_last_task(cid))
+    df_diff = cur_dt - last_dt
+    # reset status if user waits too long
+    if df_diff.seconds > service_api.TIME_LIMIT + service_api.FREQUENCY + service_api.AWAIT_TIME:
+        db.update_user_status(cid, 0)
+        db.add_log("system", "hard reset status", cid)
+        generate_text_handler(message)
+        return
+    queue_position = db.check_user_queue_position(cid)
+    # bot_text = "Please wait, image is generating. Can generate only one image at time.\n" +\
+    #            f"Your position in queue: {queue_position}"
+    bot_text = "Пожалуйста, подожди, нейронная сеть старается, но может рисовать только 1 картинку за раз.\n" + \
+               f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 
@@ -94,7 +116,8 @@ def no_start_handler(message):
 def command_default(message):
     # this is the standard reply to a normal message
     cid = message.chat.id
-    bot_text = "I don't understand \"" + message.text + "\"\nMaybe try the help page at `/help`"
+    # bot_text = "I don't understand \"" + message.text + "\"\nMaybe try the help page at `/help`"
+    bot_text = "Я не понял \"" + message.text + "\"\nПопробуй команду  `/help`"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 
