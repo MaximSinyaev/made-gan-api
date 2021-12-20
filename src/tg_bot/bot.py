@@ -47,7 +47,9 @@ def command_start(message):
 def command_help(message):
     cid = message.chat.id
     # help_text = "Write some text and awesome neural network will draw an illustration for you!"
-    help_text = "Напиши тект, который хочешь визуализировать, и классная нейронная сеть нарисует для тебя иллюстрацию!"
+    help_text = "Напиши текст, который хочешь визуализировать, и классная нейронная сеть нарисует для тебя иллюстрацию!"+\
+                "\nДля добавления стиля его можно написать через `|`. Например вот так: 'Омар | рисунок карандашом' или"+\
+                "'Кристал | Пикассо'"
     bot.send_message(cid, help_text)  # send the generated help page
     db.add_log("bot", help_text, cid)
 
