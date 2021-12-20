@@ -37,8 +37,6 @@ services:
       postgresql:
         condition: service_started
     restart: on-failure
-    # volumes:
-    #   - ./:/app/gan_api
     command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4 --hostname=gan_worker
     deploy:
       resources:
@@ -69,7 +67,6 @@ services:
         condition: service_healthy
     restart: on-failure
     volumes:
-      # - ./:/app/gan_api
       - ./templates:/app/templates
       - ./static:/app/static
     command: poetry run hypercorn src/app/main:app --bind 0.0.0.0:8000 --reload
