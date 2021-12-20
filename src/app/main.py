@@ -64,7 +64,7 @@ async def get_result(request: Request, task_id: str):
             {"request": request, "generated_image": image_path},
         )
     queue_position = pg.get_queue_position(task_id)
-    status = f"Генерация изображения. Ваше место в очереди: {queue_position}"
+    status = f"Генерация изображения. Примерное время ожидания: {2 * queue_position} минут."
     return templates.TemplateResponse(
         os.environ["DYNAMIC_TEMPLATES_RESULT_PAGE"],
         {"request": request, "status": status, "generated_image": generated_image},
