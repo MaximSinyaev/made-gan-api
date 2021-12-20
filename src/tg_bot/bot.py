@@ -62,7 +62,7 @@ def generate_text_handler(message):
         # bot_text = "Please wait, image is generating.\n" +\
         #            f"Your position in queue: {queue_position}"
         bot_text = "Подожди, пожалуйста. Нейронная уже готовит краски, скоро картинка будет готова!\n" + \
-                   f"Твоё место в очереди: {queue_position}"
+                   f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
         bot.send_message(cid, bot_text)
         db.add_image(cid, message.text, task_id, queue_position)
         db.add_log("bot", bot_text, cid)
@@ -100,7 +100,7 @@ def wait_image_handler(message):
     # bot_text = "Please wait, image is generating. Can generate only one image at time.\n" +\
     #            f"Your position in queue: {queue_position}"
     bot_text = "Пожалуйста, подожди, нейронная сеть старается, но может рисовать только 1 картинку за раз.\n" + \
-               f"Твоё место в очереди: {queue_position}"
+               f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 
