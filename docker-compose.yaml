@@ -37,7 +37,7 @@ services:
       postgresql:
         condition: service_started
     restart: on-failure
-    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 4 --hostname=gan_worker
+    command: poetry run celery worker -A src.app.worker.celery_worker -E -l info -Q gan-queue -P threads -c 1 --hostname=gan_worker
     deploy:
       resources:
         reservations:
