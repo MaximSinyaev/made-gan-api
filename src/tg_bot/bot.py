@@ -49,7 +49,7 @@ def command_help(message):
     # help_text = "Write some text and awesome neural network will draw an illustration for you!"
     help_text = "Напиши текст, который хочешь визуализировать, и классная нейронная сеть нарисует для тебя иллюстрацию!"+\
                 "\nДля добавления стиля его можно написать через `|`. Например вот так: 'Омар | рисунок карандашом' или"+\
-                "'Кристал | Пикассо'"
+                " 'Кристал | Пикассо'"
     bot.send_message(cid, help_text)  # send the generated help page
     db.add_log("bot", help_text, cid)
 
@@ -63,8 +63,8 @@ def generate_text_handler(message):
     if task_id is not None:
         # bot_text = "Please wait, image is generating.\n" +\
         #            f"Your position in queue: {queue_position}"
-        bot_text = "Подожди, пожалуйста. Нейронная уже готовит краски, скоро картинка будет готова!\n" + \
-                   f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
+        bot_text = "Подожди, пожалуйста. Нейронная сеть уже готовит краски, скоро картинка будет готова!\n" + \
+                   f"Приблизительное время ожидания в минутах: {int(queue_position) * 2}"
         bot.send_message(cid, bot_text)
         db.add_image(cid, message.text, task_id, queue_position)
         db.add_log("bot", bot_text, cid)
@@ -102,7 +102,7 @@ def wait_image_handler(message):
     # bot_text = "Please wait, image is generating. Can generate only one image at time.\n" +\
     #            f"Your position in queue: {queue_position}"
     bot_text = "Пожалуйста, подожди, нейронная сеть старается, но может рисовать только 1 картинку за раз.\n" + \
-               f"Приблизительное время ожиданияв минутах: {queue_position * 2}"
+               f"Приблизительное время ожидания в минутах: {int(queue_position) * 2}"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 

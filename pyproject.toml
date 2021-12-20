@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "made-gan-api"
 version = "0.1.0"
-description = "FastAPI with Celery tasks minimal example"
+description = "MADE GAN API"
 authors = []
 
 [tool.poetry.dependencies]
