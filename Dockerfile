@@ -45,8 +45,6 @@ RUN poetry install && \
     pip3 install poethepoet && \
     poe force-cuda-task
 
-RUN pip install --no-cache-dir requests pyTelegramBotAPI
-
 ENV PYTHONPATH=${PYTHONPATH}:/app
 ENV CELERY_GENERATE_IMAGE_TASK_NAME=src.app.worker.celery_worker.generate_image
 ENV STATIC_DIRECTORY=/app/static
@@ -56,7 +54,7 @@ ENV DYNAMIC_TEMPLATES_RESULT_PAGE=dynamic_result.html
 ENV STATIC_TEMPLATES_RESULT_PAGE=static_result.html
 ENV CELERY_BROKER_URL=amqp://user:bitnami@rabbitmq:5672//
 ENV CELERY_BROKER_API_URL=http://user:bitnami@rabbitmq:15672/api/
-ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql/gan_api
+ENV CELERY_BACKEND_URL=db+postgresql://postgres:password123@postgresql:5432/gan_api
 ENV CELERY_QUEUE_NAME=gan-queue
 ENV PG_CONNECTION_STRING="postgresql://postgres:password123@postgresql:5432/gan_api?gssencmode=disable"
 
