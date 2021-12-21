@@ -6,6 +6,9 @@ from storage_utils import ImagesDB
 import service_api
 
 BOT_PATH = os.path.abspath(os.getcwd())
+STATIC_PATH = os.getenv("STATIC_PATH")
+
+example_image_directory = os.path.join(STATIC_PATH, 'images')
 
 with open(os.path.join(BOT_PATH, "API_KEY.log"), "rt") as fin:
     API_KEY = fin.read()
@@ -35,11 +38,15 @@ def command_start(message):
     db.add_log("user", message.text, cid)
     # greeting_message = "Hello, this is an illustration bot! Glad to see you here!"
     greeting_message = "Привет, это бот для генерации иллюстраций! Рад видеть тебя в этом чате!"
-    bot.send_message(cid, greeting_message)
     db.add_log("bot", greeting_message, cid)
+    bot.send_message(cid, greeting_message)
+    greeting_message_extra = "Напиши текст, который хочешь визуализировать," +\
+                             " и классная нейронная сеть нарисует для тебя иллюстрацию!" +\
+                             "\nТакже можно заказть желаемый стиль, подробности можно узнать по команде /help"
+    db.add_log("bot", greeting_message_extra, cid)
+    bot.send_message(cid, greeting_message_extra)
     if db.check_user_status(cid) == -1:
         db.add_user(cid, name)
-    command_help(message)
 
 
 # help page
@@ -47,11 +54,20 @@ def command_start(message):
 def command_help(message):
     cid = message.chat.id
     # help_text = "Write some text and awesome neural network will draw an illustration for you!"
-    help_text = "Напиши текст, который хочешь визуализировать, и классная нейронная сеть нарисует для тебя иллюстрацию!"+\
-                "\nДля добавления стиля его можно написать через `|`. Например вот так: 'Омар | рисунок карандашом' или"+\
-                " 'Кристал | Пикассо'"
-    bot.send_message(cid, help_text)  # send the generated help page
+    help_text = "Напиши текст, который хочешь визуализировать," +\
+                " и классная нейронная сеть нарисует для тебя иллюстрацию!" +\
+                "\nЧтобы добавить желаемый стиль, его можно написать через `|`. " +\
+                "Например, вот так: 'горный пейзаж | рисунок карандашом'"
     db.add_log("bot", help_text, cid)
+    bot.send_message(cid, help_text)  # send the generated help page
+    with open(os.path.join(example_image_directory, "Example.jpg"), "rb") as f_img:
+        image = f_img.read()
+    bot.send_photo(cid, image)
+    help_text_extra = "Больше примеров доступно по ссылке:\n" + \
+                      "https://imgur.com/a/SALxbQm"
+    db.add_log("bot", help_text_extra, cid)
+    bot.send_message(cid, help_text_extra)  # send the generated help page
+
 
 
 @bot.message_handler(func=lambda m: db.check_user_status(m.chat.id) == 0, content_types=['text'])
@@ -117,7 +133,7 @@ def command_default(message):
     # this is the standard reply to a normal message
     cid = message.chat.id
     # bot_text = "I don't understand \"" + message.text + "\"\nMaybe try the help page at `/help`"
-    bot_text = "Я не понял \"" + message.text + "\"\nПопробуй команду  `/help`"
+    bot_text = "Я не понял \"" + message.text + "\"\nПопробуй команду  /help"
     bot.send_message(cid, bot_text)
     db.add_log("bot", bot_text, cid)
 
