@@ -11,6 +11,8 @@ from src.app.translation.text_translator import TextTranslator
 from worker.celery_app import celery_app
 from sql.session import PostgreSQLSession
 
+OFFSET = 12
+
 pg = PostgreSQLSession(os.environ["PG_CONNECTION_STRING"])
 
 templates = Jinja2Templates(directory=os.environ["TEMPLATES_DIRECTORY"])
@@ -72,7 +74,7 @@ async def get_result(request: Request, task_id: str):
             os.environ["STATIC_TEMPLATES_RESULT_PAGE"],
             {"request": request, "generated_image": image_path},
         )
-    queue_position = int(pg.get_queue_position(task_id)) - 12
+    queue_position = int(pg.get_queue_position(task_id)) - OFFSET
     time_delay = 2 * queue_position
 
     # status = f"Генерация изображения. Примерное время ожидания: {2 * queue_position} минут."
@@ -99,7 +101,7 @@ async def generate_image_tg(request: Request):
         task = celery_app.send_task(
             os.environ["CELERY_GENERATE_IMAGE_TASK_NAME"], args=[text, text_hash]
         )
-        queue_position = int(pg.get_queue_position(task.id)) - 12
+        queue_position = int(pg.get_queue_position(task.id)) - OFFSET
         response = Response(content=",".join([task.id, str(queue_position)]), status_code=200)
         return response
     else:
@@ -134,7 +136,7 @@ async def get_result_tg(request: Request):
         task_id = body.decode()
         res = AsyncResult(task_id)
         if not res.ready():
-            queue_position = str(pg.get_queue_position(task_id))
+            queue_position = str(int(pg.get_queue_position(task_id)) - OFFSET)
             return Response(content=queue_position, status_code=200)
         else:
             return Response(status_code=404)
