@@ -11,7 +11,7 @@ from src.app.translation.text_translator import TextTranslator
 from worker.celery_app import celery_app
 from sql.session import PostgreSQLSession
 
-OFFSET = 12
+OFFSET = 0
 
 pg = PostgreSQLSession(os.environ["PG_CONNECTION_STRING"])
 

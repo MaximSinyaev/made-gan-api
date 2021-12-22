@@ -42,9 +42,9 @@ services:
       resources:
         reservations:
           devices:
-          - driver: nvidia
-            device_ids: ['5']
-            capabilities: [gpu]
+         - driver: nvidia
+           device_ids: ['5']
+           capabilities: [gpu]
     healthcheck:
       test: poetry run celery inspect ping -A src.app.worker.celery_app -d celery@gan_worker -t 5
       interval: 60s
